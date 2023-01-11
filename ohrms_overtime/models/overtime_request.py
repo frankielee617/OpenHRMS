@@ -117,7 +117,23 @@ class HrOverTime(models.Model):
                 sheet.update({
                     'project_manager_id': sheet.project_id.user_id.id,
                 })
+            else:
+                sheet.update({
+                    'project_manager_id':'',
+                })
 
+    @api.onchange('project_id')
+    def _get_project_manager(self):
+        for sheet in self:
+            if sheet.project_id:
+                sheet.update({
+                    'project_manager_id': sheet.project_id.user_id.id,
+                })
+            else:
+                sheet.update({
+                    'project_manager_id':'',
+                })
+                
     @api.depends('date_from', 'date_to','duration_type')
     def _get_days(self):
         for recd in self:
