@@ -220,6 +220,10 @@ class HrOverTime(models.Model):
 
         self.state = 'refused'
 
+    def draft(self):
+
+        self.state = 'draft'
+
     @api.constrains('date_from', 'date_to')
     def _check_date(self):
         for req in self:

@@ -24,13 +24,16 @@
                         <button name="submit_to_f" string="Submit To Finance"
                                 type="object" class="btn-primary"
                                 attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button name="draft" string="Mark As Draft"
+                                type="object" class="btn-primary"
+                                attrs="{'invisible': [('state', '!=', 'refused')]}"/>
                         <button name="approve" string="Approve" type="object"
                                 class="btn-primary"
                                 attrs="{'invisible': [('state', '!=', 'f_approve')]}"
                                 groups="hr_holidays.group_hr_holidays_user"/>
                         <button name="reject" string="Refuse" type="object"
                                 class="btn-primary"
-                                attrs="{'invisible': ['|',('state', 'not in', ['f_approve']),('current_user_boolean', '=', True)]}"/>
+                                attrs="{'invisible': ['|','|' ,('state', '=','refused'),('name','=',False),('current_user_boolean','=',True)]}"/>
                     </header>
                     <sheet>
                         <div class="oe_title">
