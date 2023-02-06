@@ -33,7 +33,12 @@
                                 groups="hr_holidays.group_hr_holidays_user"/>
                         <button name="reject" string="Refuse" type="object"
                                 class="btn-primary"
-                                attrs="{'invisible': ['|','|' ,('state', '=','refused'),('name','=',False),('current_user_boolean','=',True)]}"/>
+                                attrs="{'invisible': ['|',
+                                ('state', 'in', ['refused','draft']),
+                                ('name','=',False)
+                                ]}"
+                        />
+                                
                     </header>
                     <sheet>
                         <div class="oe_title">
@@ -73,6 +78,7 @@
                         </group>
                         <group>
                             <group>
+                            <field name="current_user_boolean"/>
                                 <field name="date_from" required="1"
                                        class="oe_inline"
                                        attrs="{'readonly': [('state', '!=', 'draft')]}"/>
