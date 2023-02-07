@@ -33,12 +33,12 @@
                                 groups="hr_holidays.group_hr_holidays_user"/>
                         <button name="reject" string="Refuse" type="object"
                                 class="btn-primary"
-                                attrs="{'invisible': [('state', 'in', ['refused','approved'])]}"
+                                attrs="{'invisible': ['|',('state', 'in', ['refused','approved']),('name','=',False)]}"
                         />
                         <button name="reject" string="Refuse" type="object"
                                 class="btn-primary"
                                 groups="hr_holidays.group_hr_holidays_user"
-                                attrs="{'invisible': [('state', 'not in', ['approved'])]}"
+                                attrs="{'invisible': ['|',('state', 'not in', ['approved']),('name','=',False)]}"
                         />
 
                     </header>
