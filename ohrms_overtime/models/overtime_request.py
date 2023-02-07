@@ -153,28 +153,6 @@ class HrOverTime(models.Model):
                         "project_manager_id": sheet.project_id.user_id.id,
                     }
                 )
-            else:
-                sheet.update(
-                    {
-                        "project_manager_id": "",
-                    }
-                )
-
-    @api.onchange("project_id")
-    def _get_project_manager(self):
-        for sheet in self:
-            if sheet.project_id:
-                sheet.update(
-                    {
-                        "project_manager_id": sheet.project_id.user_id.id,
-                    }
-                )
-            else:
-                sheet.update(
-                    {
-                        "project_manager_id": "",
-                    }
-                )
 
     @api.depends("date_from", "date_to", "duration_type")
     def _get_days(self):
@@ -281,19 +259,20 @@ class HrOverTime(models.Model):
         )
 
     def reject(self):
-
         if self.state == "refused":
             return
 
         if self.state != "approved":
             if (
-                self.env.uid == self.employee_id.user_id.id
-                or self.env.uid == self.manager_id.id
+                    self.env.uid == self.employee_id.user_id.id
+                    or self.env.uid == self.manager_id.id
             ):
                 self.state = "refused"
                 return
 
-        if self.manager_id is None and self.env.uid == self.employee_id.user_id.id:
+        if (
+                self.manager_id is None and self.env.uid == self.employee_id.user_id.id
+        ) or self.manager_id.id == self.env.uid:
             self.state = "refused"
             return
 
@@ -337,10 +316,10 @@ class HrOverTime(models.Model):
         holiday = False
 
         if (
-            (self.current_user_boolean or self.env.uid == self._get_user_partner())
-            and self.contract_id
-            and self.date_from
-            and self.date_to
+                (self.current_user_boolean or self.env.uid == self._get_user_partner())
+                and self.contract_id
+                and self.date_from
+                and self.date_to
         ):
             for leaves in self.contract_id.sudo().resource_calendar_id.global_leave_ids:
                 leave_dates = pd.date_range(leaves.date_from, leaves.date_to).date
