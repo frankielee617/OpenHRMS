@@ -19,95 +19,122 @@
             <field name="arch" type="xml">
                 <form string="Overtime Request">
                     <header>
-                        <field name="state" widget="statusbar"
-                               statusbar_visible="f_approve,approved,done"/>
-                        <button name="submit_to_f" string="Submit To Finance"
-                                type="object" class="btn-primary"
-                                attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                        <button name="draft" string="Mark As Draft"
-                                type="object" class="btn-primary"
-                                attrs="{'invisible': [('state', '!=', 'refused')]}"/>
-                        <button name="approve" string="Approve" type="object"
-                                class="btn-primary"
-                                attrs="{'invisible': [('state', '!=', 'f_approve')]}"
-                                groups="hr_holidays.group_hr_holidays_user"/>
-                        <button name="reject" string="Refuse" type="object"
-                                class="btn-primary"
-                                attrs="{'invisible': ['|',('state', 'in', ['refused','approved']),('name','=',False)]}"
-                        />
-                        <button name="reject" string="Refuse" type="object"
-                                class="btn-primary"
-                                groups="hr_holidays.group_hr_holidays_user"
-                                attrs="{'invisible': ['|',('state', 'not in', ['approved']),('name','=',False)]}"
-                        />
+                        <field name="state" widget="statusbar" statusbar_visible="f_approve,approved,done"/>
+                        <button name="submit_to_f" string="Submit To Finance" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button name="draft" string="Mark As Draft" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'refused')]}"/>
+                        <button name="approve" string="Approve" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'f_approve')]}" groups="hr_holidays.group_hr_holidays_user"/>
+                        <button name="reject" string="Refuse" type="object" class="btn-primary" attrs="{'invisible': ['|',('state', 'in', ['refused','approved']),('name','=',False)]}" />
+                        <button name="reject" string="Refuse" type="object" class="btn-primary" groups="hr_holidays.group_hr_holidays_user" attrs="{'invisible': ['|',('state', 'not in', ['approved']),('name','=',False)]}" />
 
                     </header>
                     <sheet>
                         <div class="oe_title">
                             <h1>
-                                <field name="name" required="0"
-                                       placeholder="Reference ...."/>
+                                <field name="name" required="0" placeholder="Reference ...."/>
                             </h1>
                         </div>
                         <group>
                             <group>
-                                <field name='employee_id'
-                                       options="{'no_quick_create': True, 'no_create_edit' : True}"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name='employee_id' options="{'no_quick_create': True, 'no_create_edit' : True}" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name='department_id'/>
                                 <field name='job_id'/>
                                 <field name='manager_id'/>
-                                <field name="duration_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="current_user_boolean"
-                                       invisible="1"/>
+                                <field name="duration_type" attrs="{'readonly': [('state', '!=', 'draft')]}" invisible="1"/>
+                                <field name="request_unit" invisible="1"/>
+                                <field name="current_user_boolean" invisible="1"/>
+                                <field name="request_unit" invisible="1"/>
+                                <field name="number_of_hours_text" invisible="1"/>
                             </group>
                             <group>
                                 <field name='current_user' invisible="1"/>
                                 <field name="contract_id"/>
-                                <field name='attchd_copy'
-                                       filename="attchd_copy_name"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name='attchd_copy' filename="attchd_copy_name" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name='type' attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name='overtime_type_id' groups="hr.group_hr_user" attrs="{'readonly': [('state', '!=', 'f_approve')],
                                  'invisible': [('state', '=', 'draft')], 'required': [('state', '=', 'f_approve')]}"/>
-                                <field name="cash_hrs_amount" force_save="1"
-                                       attrs="{'invisible': ['|','|',('state', '=', 'draft'),('type','!=', 'cash'),('duration_type','!=','hours')]}"/>
-                                <field name="cash_day_amount" force_save="1"
-                                       attrs="{'invisible': ['|','|',('state', '=', 'draft'),('type','!=', 'cash'),('duration_type','!=','days')]}"/>
+                                <field name="cash_hrs_amount" force_save="1" attrs="{'invisible': ['|','|',('state', '=', 'draft'),('type','!=', 'cash'),('duration_type','!=','hours')]}"/>
+                                <field name="cash_day_amount" force_save="1" attrs="{'invisible': ['|','|',('state', '=', 'draft'),('type','!=', 'cash'),('duration_type','!=','days')]}"/>
                                 <field name="attchd_copy_name" invisible="1"/>
-                                <field name="leave_id"
-                                       attrs="{'invisible': [('leave_id', '=', False)],'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="leave_id" attrs="{'invisible': [('leave_id', '=', False)],'readonly': [('state', '!=', 'draft')]}"/>
                             </group>
                         </group>
                         <group>
-                            <group>
-                                <field name="date_from" required="1"
-                                       class="oe_inline"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="date_to" required="1"
-                                       class="oe_inline"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="days_no_tmp" string="Hours"
-                                       attrs="{'invisible': [('duration_type', '=', 'days')]}"/>
-                                <field name="days_no_tmp" string="Days"
-                                       attrs="{'invisible': [('duration_type', '=', 'hours')]}"/>
-                                <field name="payslip_paid" readonly="1" attrs="{'invisible': [('type','!=', 'cash')]}"
-                                       widget="toggle_button" groups="hr.group_hr_manager"/>
-                                <field name="days_no" readonly="1"
-                                       invisible="1"/>
+                            <group name="col_left">
+                                <!-- full days -->
+                                <label for="request_date_from" string="Dates" attrs="{'invisible': ['|', ('request_unit_half', '=', True), ('request_unit_hours', '=', True)]}"/>
+                                <div class="o_row" attrs="{'invisible': ['|', ('request_unit_half', '=', True), ('request_unit_hours', '=', True)]}">
+                                    <span class="text-muted">From</span>
+                                    <field name="request_date_from" required="1" class="oe_inline" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <span class="text-muted">To</span>
+                                    <field name="request_date_to" required="1" class="oe_inline" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                </div>
+                                <!-- end full days -->
+                                <!-- half days -->
+                                <label for="request_date_from" string="Date" attrs="{'invisible': ['|',('request_unit_half', '=', False), ('request_unit_hours', '=', True)]}" />
+                                <div class="o_row" attrs="{'invisible': ['|',('request_unit_half', '=', False), ('request_unit_hours', '=', True)]}">
+                                    <span class="text-muted">From</span>
+                                    <field name="request_date_from" required="1" class="oe_inline" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <field name="request_date_from_period" required="1" class="oe_inline" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                </div>
+                                <!-- end half days -->
+                                <!-- hours days -->
+                                <label for="request_date_from" string="Date" attrs="{'invisible': [('request_unit_hours', '=', False)]}"/>
+                                <div class="o_row" attrs="{'invisible': [('request_unit_hours', '=', False)]}">
+                                    <span class="text-muted">From</span>
+                                    <field name="request_date_from" required="1" class="oe_inline" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                </div>
+                                <!-- end hours days -->
+                                <!-- hours  -->
+                                <label for="request_hour_from" string="" attrs="{'invisible': [('request_unit_hours', '=', False)]}"/>
+                                <div class="o_row o_row_readonly" attrs="{'invisible': [('request_unit_hours', '=', False)]}">
+                                    <label for="request_hour_from" string="From" />
+                                    <field name="request_hour_from" attrs="{
+                                            'readonly': [('state', '=', 'validate')],
+                                            'required': [('request_unit_hours', '=', True)],
+                                            'invisible': [('request_unit_hours', '=', False)]}" />
+                                    <label for="request_hour_to" string="To" />
+                                    <field name="request_hour_to" attrs="{
+                                            'readonly': [('state', '=', 'validate')],
+                                            'required': [('request_unit_hours', '=', True)],
+                                            'invisible': [('request_unit_hours', '=', False)]}" />
+                                </div>
+                                <!-- end hours  -->
+                                <!-- Options -->
+                                <label for="request_unit_half" string=""/>
+                                <div class="o_row o_row_readonly oe_edit_only" style="margin-left: -2px;">
+                                    <field name="request_unit_half" class="oe_inline" attrs="{
+                                        'readonly': [('state', 'not in', ('draft', 'confirm'))],
+                                    }" />
+                                    <label for="request_unit_half" string="Half Day"/>
+
+                                    <field name="request_unit_hours" attrs="{
+                                        'readonly': [('state', 'not in', ('draft', 'confirm'))],
+                                    }" class="ms-5" />
+                                    <label for="request_unit_hours" string="Custom Hours"/>
+                                </div>
+                                <label for="days_no_tmp" string="Duration" />
+                                <div name="duration_display" attrs="{'invisible': [('request_unit_half', '=', True), ('request_unit', '!=', 'hour')]}">
+                                    <div attrs="{'invisible': ['|', ('request_unit_half', '=', True), ('request_unit_hours', '=', True)]}" class="o_row">
+                                        <field name="days_no_tmp" class="oe_inline" />
+                                        <span>Days</span>
+                                    </div>
+                                    <div class="o_row">
+                                        <field name="number_of_hours_text" />
+                                    </div>
+                                </div>
+                                <field name="payslip_paid" readonly="1" attrs="{'invisible': [('type','!=', 'cash')]}" widget="toggle_button" groups="hr.group_hr_manager"/>
+                                <field name="days_no" readonly="1" invisible="1"/>
                             </group>
                             <group>
                                 <div>
                                     <separator string="Public Holiday"/>
-                                    <field name="public_holiday"
-                                           force_save="1"/>
+                                    <field name="public_holiday" force_save="1"/>
                                 </div>
                             </group>
                         </group>
                         <notebook>
                             <page string="Work Description" name="work_description">
-                                <field name="desc"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="desc" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                             </page>
                             <page string="Attendance">
                                 <field name="attendance_ids" readonly="1"/>
@@ -121,9 +148,7 @@
                         </notebook>
                     </sheet>
                     <div class="oe_chatter">
-                        <field name="message_follower_ids"
-                               widget="mail_followers"
-                               groups="base.group_user"/>
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
                         <field name="message_ids" widget="mail_thread"/>
                     </div>
                 </form>
@@ -142,8 +167,7 @@
                     <field name="days_no_tmp"/>
                     <field name="state"/>
                     <field name="type" invisible="1"/>
-                    <field name="payslip_paid" groups="hr.group_hr_manager" readonly="1"
-                           attrs="{'invisible': [('type','!=', 'cash')]}" widget="toggle_button"/>
+                    <field name="payslip_paid" groups="hr.group_hr_manager" readonly="1" attrs="{'invisible': [('type','!=', 'cash')]}" widget="toggle_button"/>
                 </tree>
             </field>
         </record>
@@ -163,12 +187,8 @@
 
 
         <!-- MenuItems -->
-        <menuitem id="overtime_submenu" name="Overtime Request"
-                  groups="base.group_user" web_icon="ohrms_overtime,static/description/overtime_icon.png"/>
-        <menuitem id="overtime" name="Overtime Request"
-                  parent="overtime_submenu"
-                  action="hr_overtime_action"
-                  groups="base.group_user"/>
+        <menuitem id="overtime_submenu" name="Overtime Request" groups="base.group_user" web_icon="ohrms_overtime,static/description/overtime_icon.png"/>
+        <menuitem id="overtime" name="Overtime Request" parent="overtime_submenu" action="hr_overtime_action" groups="base.group_user"/>
 
 
         <!-- Filtered View -->

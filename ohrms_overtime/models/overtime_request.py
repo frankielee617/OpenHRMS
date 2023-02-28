@@ -132,6 +132,159 @@ class HrOverTime(models.Model):
     cash_day_amount = fields.Float(string="Overtime Amount", readonly=True)
     payslip_paid = fields.Boolean("Paid in Payslip", readonly=True)
 
+    # Overtime Request Form Customization
+    request_date_from = fields.Date('Request Start Date')
+    request_date_to = fields.Date('Request End Date')
+    request_unit_half = fields.Boolean(string='Half Day', compute='_compute_request_unit_half', store=True, readonly=False,default=False)
+    request_unit_hours = fields.Boolean(string='Custom Hours', compute='_compute_request_unit_hours', store=True, readonly=False,default=False)
+    request_unit = fields.Selection([('day', 'Day'),
+        ('half_day', 'Half Day'),
+        ('hour', 'Hours')], default='day', string='Take Time Off in', required=True)
+    number_of_hours_text = fields.Char(compute='_compute_number_of_hours_text')
+
+    # used only when the leave is taken in half days
+    request_date_from_period = fields.Selection([
+        ('am', 'Morning'), ('pm', 'Afternoon')],
+        string="Date Period Start", default='am')
+    request_hour_from = fields.Selection([
+        ('0', '12:00 AM'), ('0.5', '12:30 AM'),
+        ('1', '1:00 AM'), ('1.5', '1:30 AM'),
+        ('2', '2:00 AM'), ('2.5', '2:30 AM'),
+        ('3', '3:00 AM'), ('3.5', '3:30 AM'),
+        ('4', '4:00 AM'), ('4.5', '4:30 AM'),
+        ('5', '5:00 AM'), ('5.5', '5:30 AM'),
+        ('6', '6:00 AM'), ('6.5', '6:30 AM'),
+        ('7', '7:00 AM'), ('7.5', '7:30 AM'),
+        ('8', '8:00 AM'), ('8.5', '8:30 AM'),
+        ('9', '9:00 AM'), ('9.5', '9:30 AM'),
+        ('10', '10:00 AM'), ('10.5', '10:30 AM'),
+        ('11', '11:00 AM'), ('11.5', '11:30 AM'),
+        ('12', '12:00 PM'), ('12.5', '12:30 PM'),
+        ('13', '1:00 PM'), ('13.5', '1:30 PM'),
+        ('14', '2:00 PM'), ('14.5', '2:30 PM'),
+        ('15', '3:00 PM'), ('15.5', '3:30 PM'),
+        ('16', '4:00 PM'), ('16.5', '4:30 PM'),
+        ('17', '5:00 PM'), ('17.5', '5:30 PM'),
+        ('18', '6:00 PM'), ('18.5', '6:30 PM'),
+        ('19', '7:00 PM'), ('19.5', '7:30 PM'),
+        ('20', '8:00 PM'), ('20.5', '8:30 PM'),
+        ('21', '9:00 PM'), ('21.5', '9:30 PM'),
+        ('22', '10:00 PM'), ('22.5', '10:30 PM'),
+        ('23', '11:00 PM'), ('23.5', '11:30 PM')], string='Hour from')
+    request_hour_to = fields.Selection([
+        ('0', '12:00 AM'), ('0.5', '12:30 AM'),
+        ('1', '1:00 AM'), ('1.5', '1:30 AM'),
+        ('2', '2:00 AM'), ('2.5', '2:30 AM'),
+        ('3', '3:00 AM'), ('3.5', '3:30 AM'),
+        ('4', '4:00 AM'), ('4.5', '4:30 AM'),
+        ('5', '5:00 AM'), ('5.5', '5:30 AM'),
+        ('6', '6:00 AM'), ('6.5', '6:30 AM'),
+        ('7', '7:00 AM'), ('7.5', '7:30 AM'),
+        ('8', '8:00 AM'), ('8.5', '8:30 AM'),
+        ('9', '9:00 AM'), ('9.5', '9:30 AM'),
+        ('10', '10:00 AM'), ('10.5', '10:30 AM'),
+        ('11', '11:00 AM'), ('11.5', '11:30 AM'),
+        ('12', '12:00 PM'), ('12.5', '12:30 PM'),
+        ('13', '1:00 PM'), ('13.5', '1:30 PM'),
+        ('14', '2:00 PM'), ('14.5', '2:30 PM'),
+        ('15', '3:00 PM'), ('15.5', '3:30 PM'),
+        ('16', '4:00 PM'), ('16.5', '4:30 PM'),
+        ('17', '5:00 PM'), ('17.5', '5:30 PM'),
+        ('18', '6:00 PM'), ('18.5', '6:30 PM'),
+        ('19', '7:00 PM'), ('19.5', '7:30 PM'),
+        ('20', '8:00 PM'), ('20.5', '8:30 PM'),
+        ('21', '9:00 PM'), ('21.5', '9:30 PM'),
+        ('22', '10:00 PM'), ('22.5', '10:30 PM'),
+        ('23', '11:00 PM'), ('23.5', '11:30 PM')], string='Hour to')
+    
+    @api.depends('request_unit_hours')
+    def _compute_request_unit_half(self):
+        for sheet in self:
+            if sheet.request_unit_hours:
+                sheet.request_unit_half = False
+
+    @api.depends('request_unit_half')
+    def _compute_request_unit_hours(self):
+        for sheet in self:
+            if sheet.request_unit_half:
+                sheet.request_unit_hours = False
+
+    # @api.depends('number_of_hours_display')
+    def _compute_number_of_hours_text(self):
+        # YTI Note: All this because a readonly field takes all the width on edit mode...
+        for sheet in self:
+            sheet.number_of_hours_text = '%s%g %s%s' % (
+                '' if sheet.request_unit_half or sheet.request_unit_hours else '(',
+                float_round(sheet.number_of_hours_display, precision_digits=2),
+                _('Hours'),
+                '' if sheet.request_unit_half or sheet.request_unit_hours else ')')
+
+    # @api.onchange("request_date_from","request_date_to")
+    # def update_hours(self):
+    #     holiday = False
+
+    #     if (
+    #             (self.current_user_boolean or self.env.uid == self._get_user_partner())
+    #             and self.contract_id
+    #             and self.request_date_from
+    #             and self.request_date_to
+    #     ):
+    #         for leaves in self.contract_id.sudo().resource_calendar_id.global_leave_ids:
+    #             leave_dates = pd.date_range(leaves.date_from, leaves.date_to).date
+    #             overtime_dates = pd.date_range(self.request_date_from, self.request_date_to).date
+    #             for over_time in overtime_dates:
+    #                 for leave_date in leave_dates:
+    #                     if leave_date == over_time:
+    #                         holiday = True
+
+    #         if holiday:
+    #             self.write(
+    #                 {
+    #                     "public_holiday": "You have Public Holidays in your Overtime request."
+    #                 }
+    #             )
+    #         else:
+    #             self.write({"public_holiday": " "})
+    #         hr_attendance = self.env["hr.attendance"].search(
+    #             [
+    #                 ("check_in", ">=", self.date_from),
+    #                 ("check_in", "<=", self.date_to),
+    #                 ("employee_id", "=", self.employee_id.id),
+    #             ]
+    #         )
+    #         self.update({"attendance_ids": [(6, 0, hr_attendance.ids)]})
+
+    @api.onchange("request_date_from", "request_date_to", "duration_type")
+    def asd_get_days(self):
+        for recd in self:
+            if recd.request_date_from and recd.request_date_to:
+                if recd.request_date_from > recd.request_date_to:
+                    raise ValidationError("Start Date must be less than End Date")
+        for sheet in self:
+            if sheet.request_date_from and sheet.request_date_to:
+                start_dt = fields.Datetime.from_string(sheet.request_date_from)
+                finish_dt = fields.Datetime.from_string(sheet.request_date_to)
+                s = finish_dt - start_dt
+                difference = relativedelta.relativedelta(finish_dt, start_dt)
+                hours = difference.hours
+                minutes = difference.minutes
+                days_in_mins = s.days * 24 * 60
+                hours_in_mins = hours * 60
+                days_no = (days_in_mins + hours_in_mins + minutes) / (24 * 60)
+
+                diff = sheet.request_date_to - sheet.request_date_from
+                days, seconds = (diff.days+1), diff.seconds
+                hours = days * 24 + seconds // 3600
+                sheet.update(
+                    {
+                        "days_no_tmp": days
+                        if sheet.duration_type == "hours"
+                        else days_no,
+                        "number_of_hours_text" :f"({days *10} hours)"
+                    }
+                )
+    ## end customization
+
     @api.onchange("employee_id")
     def _get_defaults(self):
         for sheet in self:
@@ -345,7 +498,6 @@ class HrOverTime(models.Model):
                 ]
             )
             self.update({"attendance_ids": [(6, 0, hr_attendance.ids)]})
-
 
 class HrOverTimeType(models.Model):
     _name = "overtime.type"
